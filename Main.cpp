@@ -160,7 +160,7 @@ int main(int argc, char** argv)
   detect_humans(img, people);
   for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
   {
-    draw_bbox(input_img, iter->bbox);
+    draw_bbox(img, iter->bbox);
   }
 
 
@@ -169,7 +169,7 @@ int main(int argc, char** argv)
   compression_params.push_back(9);
   try
   {
-    imwrite("modded.png", input_img, compression_params);
+    imwrite("modded.png", img, compression_params);
   }
   catch (const cv::Exception& ex)
   {
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
   }
 
   namedWindow("Display Image", WINDOW_AUTOSIZE );
-  imshow("Display Image", input_img);
+  imshow("Display Image", img);
   waitKey(0);
   return 0;
 }
