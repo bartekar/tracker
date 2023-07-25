@@ -52,17 +52,13 @@ void draw_bbox(Mat img, Rect r)
   }
 }
 
-void detect_humans(Mat img, vector<struct MyBBox> &output)
+void detect_humans(dnn::Net &nnet, Mat img, vector<struct MyBBox> &output)
 {
   const float INPUT_WIDTH = 640.0;
   const float INPUT_HEIGHT = 640.0;
   const float SCORE_THRESHOLD = 0.2;
   const float NMS_THRESHOLD = 0.4;
   const float CONFIDENCE_THRESHOLD = 0.4;
-
-  dnn::Net nnet = dnn::readNet("../yolov5s.onnx"); // todo: remove unnecessary files out of the repository
-  nnet.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
-  nnet.setPreferableTarget(dnn::DNN_TARGET_CPU);
 
   int mx = MAX(img.cols, img.rows);
   Mat img_square = Mat::zeros(mx, mx, CV_8UC3);
@@ -152,12 +148,12 @@ int main(int argc, char** argv)
   cvtColor( input_img, img, COLOR_RGB2BGR ); // rgb -> bgr, so that one can actually see the results
   // from now on it is bgr
 
-//  dnn::Net net = dnn::readNet("../yolov5s.onnx"); // todo: remove unnecessary files out of the repository
-//  net.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
-//  net.setPreferableTarget(dnn::DNN_TARGET_CPU);
+  dnn::Net nnet = dnn::readNet("../yolov5s.onnx"); // todo: remove unnecessary files out of the repository
+  nnet.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
+  nnet.setPreferableTarget(dnn::DNN_TARGET_CPU);
 
   vector<MyBBox> people;
-  detect_humans(img, people);
+  detect_humans(nnet, img, people);
   for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
   {
     draw_bbox(img, iter->bbox);
