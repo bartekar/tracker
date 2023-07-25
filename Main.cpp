@@ -80,8 +80,9 @@ void detect_humans(Mat img, vector<struct MyBBox> &output)
 
   float *data = (float *)outputs[0].data;
 
-  const int dimensions = 85;
-  const int rows = 25200;
+  const int dimensions = 85; // todo: understand magic number
+  const int rows = 25200; // todo: this one too
+  const int PERSON_CLASS = 0;
 
   std::vector<int> class_ids;
   std::vector<float> confidences;
@@ -97,7 +98,7 @@ void detect_humans(Mat img, vector<struct MyBBox> &output)
       Point class_id;
       double max_class_score;
       minMaxLoc(scores, 0, &max_class_score, 0, &class_id);
-      if (max_class_score > SCORE_THRESHOLD)
+      if ((max_class_score > SCORE_THRESHOLD) && (PERSON_CLASS == class_id.x))
       {
         confidences.push_back(confidence);
         class_ids.push_back(class_id.x);
