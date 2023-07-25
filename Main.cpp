@@ -23,8 +23,9 @@ struct MyBBox
 
 typedef struct MyBBox MyBBox;
 
-void draw_bbox(Mat img, Rect r)
+void draw_bbox(Mat img, MyBBox bbox)
 {
+  Rect r = bbox.bbox;
   if (r.x + r.width > img.cols)
   {
     cout << "bbox is too high"  << endl;
@@ -36,20 +37,12 @@ void draw_bbox(Mat img, Rect r)
     return;
   }
 
-  for (int h=r.y; h < r.y+r.height; h++)
-  {
-    img.at<Vec3b>(h,r.x)[0] = 255;
-    img.at<Vec3b>(h,r.x)[1] = 127;
-    img.at<Vec3b>(h,r.x+r.width)[0] = 255;
-    img.at<Vec3b>(h,r.x+r.width)[1] = 127;
-  }
-  for (int w=r.x; w < r.x+r.width; w++)
-  {
-    img.at<Vec3b>(r.y,w)[0] = 255;
-    img.at<Vec3b>(r.y,w)[1] = 127;
-    img.at<Vec3b>(r.y+r.height,w)[0] = 255;
-    img.at<Vec3b>(r.y+r.height,w)[1] = 127;
-  }
+  Scalar orange = Scalar(0, 127, 255); // bgr
+  rectangle(img, bbox.bbox, orange, 1);
+
+  char buffer[5]; // e.g. 0.89 -> 4 chars + terminating char
+  sprintf(buffer, "%.2f", bbox.confidence);
+  putText(img, buffer, Point(r.x, r.y - 5), FONT_HERSHEY_SIMPLEX, 0.5, orange);
 }
 
 void detect_humans(dnn::Net &nnet, Mat img, vector<struct MyBBox> &output)
@@ -135,9 +128,6 @@ int main(int argc, char** argv)
   Mat input_img;
   input_img = imread( argv[1], IMREAD_COLOR ); // rgb image
 
-  Rect bbox(100, 10, 200, 50);
-  draw_bbox(input_img, bbox); // manipulating red and green channels (index 0 and 1)
-
   if ( !input_img.data )
   {
     printf("No image data \n");
@@ -175,7 +165,7 @@ int main(int argc, char** argv)
     detect_humans(nnet, frame, people);
     for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
     {
-      draw_bbox(frame, iter->bbox);
+      draw_bbox(frame, *iter);
     }
     people.clear();
     // Display the resulting frame
