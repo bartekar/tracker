@@ -153,11 +153,41 @@ int main(int argc, char** argv)
   nnet.setPreferableTarget(dnn::DNN_TARGET_CPU);
 
   vector<MyBBox> people;
-  detect_humans(nnet, img, people);
-  for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+
+
+  VideoCapture cap("gump.mp4");
+
+  // Check if camera opened successfully
+  if(!cap.isOpened())
   {
-    draw_bbox(img, iter->bbox);
+    cout << "Error opening video stream or file" << endl;
+    return -1;
   }
+
+  while(1)
+  {
+    Mat frame;
+    cap >> frame;
+
+    if (frame.empty())
+      break;
+
+    detect_humans(nnet, frame, people);
+    for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+    {
+      draw_bbox(frame, iter->bbox);
+    }
+    people.clear();
+    // Display the resulting frame
+    imshow( "Frame", frame );
+
+    char c=(char)waitKey(25); // Press  ESC on keyboard to exit
+    if(c==27)
+      break;
+  }
+
+  cap.release(); // When everything done, release the video capture object
+  destroyAllWindows(); // Closes all the frames
 
 
   vector<int> compression_params;
