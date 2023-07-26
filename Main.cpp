@@ -150,25 +150,25 @@ int main(int argc, char** argv)
 
   // vars for tracker
   Rect2d tracker_box = Rect(0,0,0,0);
-  Ptr<legacy::Tracker> tracker = legacy::tracking::TrackerBoosting::create();
+  Ptr<legacy::Tracker> tracker = legacy::tracking::TrackerTLD::create();
 
   /*
 if (trackerType == "BOOSTING")
-    tracker = TrackerBoosting::create(); // geht nicht
+    tracker = TrackerBoosting::create(); // geht verloren
 if (trackerType == "MIL")
     tracker = TrackerMIL::create(); // skaliert nicht, schlaegt fehl nach ersten szenensprung
 if (trackerType == "KCF")
-    tracker = TrackerKCF::create();
+    tracker = TrackerKCF::create(); // geht ruck zuck verloren
 if (trackerType == "TLD")
-    tracker = TrackerTLD::create();
+    tracker = TrackerTLD::create(); // skaliert!, schlittert
 if (trackerType == "MEDIANFLOW")
-    tracker = TrackerMedianFlow::create();
+    tracker = TrackerMedianFlow::create(); // schnell, trackt aber kaum
 if (trackerType == "GOTURN")
-    tracker = TrackerGOTURN::create();
+    tracker = TrackerGOTURN::create(); // gibt es nicht
 if (trackerType == "MOSSE")
     tracker = TrackerMOSSE::create();
 if (trackerType == "CSRT")
-    tracker = TrackerCSRT::create();
+    tracker = TrackerCSRT::create(); // cool
     */
 
   VideoCapture cap("gump.mp4");
