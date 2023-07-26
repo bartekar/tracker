@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/tracking.hpp>
+#include <opencv2/tracking/tracking_legacy.hpp>
 
 using namespace cv;
 using namespace std;
@@ -13,6 +15,8 @@ https://github.com/doleron/yolov5-opencv-cpp-python/blob/main/cpp/yolo.cpp
 TBD
 
 */
+
+Scalar orange = Scalar(0, 127, 255); // bgr
 
 struct MyBBox
 {
@@ -37,7 +41,7 @@ void draw_bbox(Mat img, MyBBox bbox)
     return;
   }
 
-  Scalar orange = Scalar(0, 127, 255); // bgr
+
   rectangle(img, bbox.bbox, orange, 1);
 
   char buffer[5]; // e.g. 0.89 -> 4 chars + terminating char
@@ -144,6 +148,28 @@ int main(int argc, char** argv)
 
   vector<MyBBox> people;
 
+  // vars for tracker
+  Rect2d tracker_box = Rect(0,0,0,0);
+  Ptr<legacy::Tracker> tracker = legacy::tracking::TrackerBoosting::create();
+
+  /*
+if (trackerType == "BOOSTING")
+    tracker = TrackerBoosting::create(); // geht nicht
+if (trackerType == "MIL")
+    tracker = TrackerMIL::create(); // skaliert nicht, schlaegt fehl nach ersten szenensprung
+if (trackerType == "KCF")
+    tracker = TrackerKCF::create();
+if (trackerType == "TLD")
+    tracker = TrackerTLD::create();
+if (trackerType == "MEDIANFLOW")
+    tracker = TrackerMedianFlow::create();
+if (trackerType == "GOTURN")
+    tracker = TrackerGOTURN::create();
+if (trackerType == "MOSSE")
+    tracker = TrackerMOSSE::create();
+if (trackerType == "CSRT")
+    tracker = TrackerCSRT::create();
+    */
 
   VideoCapture cap("gump.mp4");
 
@@ -154,26 +180,37 @@ int main(int argc, char** argv)
     return -1;
   }
 
+  Mat frame;
+  cap >> frame;
+
+  detect_humans(nnet, frame, people);
+  for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+  {
+    draw_bbox(frame, *iter);
+  }
+  tracker_box = people[0].bbox;
+  people.clear();
+  tracker->init(frame, tracker_box);
+
   while(1)
   {
-    Mat frame;
-    cap >> frame;
-
     if (frame.empty())
       break;
 
-    detect_humans(nnet, frame, people);
-    for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+
+    bool ok = tracker->update(frame, tracker_box);
+    if (ok)
     {
-      draw_bbox(frame, *iter);
+      rectangle(frame, tracker_box, orange, 1);
     }
-    people.clear();
+
     // Display the resulting frame
     imshow( "Frame", frame );
 
     char c=(char)waitKey(25); // Press  ESC on keyboard to exit
     if(c==27)
       break;
+    cap >> frame;
   }
 
   cap.release(); // When everything done, release the video capture object
