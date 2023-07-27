@@ -14,6 +14,8 @@ TBD
 
 */
 
+Scalar orange = Scalar(0, 127, 255); // bgr
+
 struct MyBBox
 {
   int class_id;
@@ -37,7 +39,7 @@ void draw_bbox(Mat img, MyBBox bbox)
     return;
   }
 
-  Scalar orange = Scalar(0, 127, 255); // bgr
+
   rectangle(img, bbox.bbox, orange, 1);
 
   char buffer[5]; // e.g. 0.89 -> 4 chars + terminating char
@@ -144,6 +146,10 @@ int main(int argc, char** argv)
 
   vector<MyBBox> people;
 
+  // vars for tracker
+  Ptr<Tracker> tracker;
+  Rect tracker_box = Rect(0,0,0,0);
+  tracker = TrackerMIL::create();
 
   VideoCapture cap("gump.mp4");
 
@@ -154,26 +160,37 @@ int main(int argc, char** argv)
     return -1;
   }
 
+  Mat frame;
+  cap >> frame;
+
+  detect_humans(nnet, frame, people);
+  for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+  {
+    draw_bbox(frame, *iter);
+  }
+  tracker_box = people[0].bbox;
+  people.clear();
+  tracker->init(frame, tracker_box);
+
   while(1)
   {
-    Mat frame;
-    cap >> frame;
-
     if (frame.empty())
       break;
 
-    detect_humans(nnet, frame, people);
-    for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+
+    bool ok = tracker->update(frame, tracker_box);
+    if (ok)
     {
-      draw_bbox(frame, *iter);
+      rectangle(frame, tracker_box, orange, 1);
     }
-    people.clear();
+
     // Display the resulting frame
     imshow( "Frame", frame );
 
     char c=(char)waitKey(25); // Press  ESC on keyboard to exit
     if(c==27)
       break;
+    cap >> frame;
   }
 
   cap.release(); // When everything done, release the video capture object
