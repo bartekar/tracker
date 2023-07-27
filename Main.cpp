@@ -172,16 +172,33 @@ int main(int argc, char** argv)
   people.clear();
   tracker->init(frame, tracker_box);
 
+  const int DETECTION_PERIOD= 24;
+  int loops_until_next_detection = DETECTION_PERIOD;
+
   while(1)
   {
     if (frame.empty())
       break;
 
-
-    bool ok = tracker->update(frame, tracker_box);
-    if (ok)
+    if (loops_until_next_detection-- <= 0)
     {
-      rectangle(frame, tracker_box, orange, 1);
+      detect_humans(nnet, frame, people);
+      for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+      {
+        draw_bbox(frame, *iter);
+      }
+      tracker_box = people[0].bbox;
+      people.clear();
+      tracker->init(frame, tracker_box);
+      loops_until_next_detection = DETECTION_PERIOD;
+    }
+    else
+    {
+      bool ok = tracker->update(frame, tracker_box);
+      if (ok)
+      {
+        rectangle(frame, tracker_box, orange, 1);
+      }
     }
 
     // Display the resulting frame
