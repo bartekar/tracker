@@ -121,6 +121,78 @@ void detect_humans(dnn::Net &nnet, Mat img, vector<struct MyBBox> &output)
   }
 }
 
+void paint_skeleton(Mat img)
+{
+  // Specify the paths for the 2 files
+  string protoFile = "/home/leaf/openpose/models/pose/mpi/pose_deploy_linevec_faster_4_stages.prototxt";
+  string weightsFile = "/home/leaf/openpose/models/pose/mpi/pose_iter_160000.caffemodel";
+  // Read the network into Memory
+  dnn::Net net = dnn::readNetFromCaffe(protoFile, weightsFile);
+
+  Mat frame = imread("single.jpg");
+  // Specify the input image dimensions
+  int inWidth = 368;
+  int inHeight = 368;
+  // Prepare the frame to be fed to the network
+  Mat inpBlob = dnn::blobFromImage(img, 1.0 / 255, Size(inWidth, inHeight), Scalar(0, 0, 0), false, false);
+  // Set the prepared object as the input blob of the network
+  net.setInput(inpBlob);
+
+  Mat output = net.forward();
+
+  int H = output.size[2];
+  int W = output.size[3];
+
+  int nPoints = 15;
+  double thresh = 0.1;
+  int frameWidth = 448*2;
+  int frameHeight = 704;
+  // find the position of the body parts
+  vector<Point> points(nPoints);
+
+  for (int n=0; n < nPoints; n++)
+  {
+    // Probability map of corresponding body's part.
+    Mat probMap(H, W, CV_32F, output.ptr(0,n));
+
+    Point2f p(-1,-1);
+    Point maxLoc;
+    double prob;
+    minMaxLoc(probMap, 0, &prob, 0, &maxLoc);
+    if (prob > thresh)
+    {
+      p = maxLoc;
+      p.x *= (float)frameWidth / W ;
+      p.y *= (float)frameHeight / H ;
+    }
+    points[n] = p;
+  }
+
+  const int nPairs = 14;
+  int pairs[nPairs*2] = {
+            0,1, 1,2, 2,3, 3,4, 1,5, 5,6, 6,7, 1,14, 14,8, 8,9, 9,10, 14,11, 11,12, 12,13
+        };
+  for (int n = 0; n < nPairs; n++)
+  {
+    // lookup 2 connected body/hand parts
+    Point2f partA = points[pairs[2*n+0]];
+    Point2f partB = points[pairs[2*n+1]];
+
+    if (partA.x<=0 || partA.y<=0 || partB.x<=0 || partB.y<=0)
+        continue;
+
+    line(img, partA, partB, Scalar(255,0,127), 8);
+  }
+
+  for (int n=0; n < nPoints; n++)
+  {
+    Point2f p = points[n];
+    circle(img, cv::Point((int)p.x, (int)p.y), 8, Scalar(255,0,127), -1);
+    cv::putText(img, cv::format("%d", n), cv::Point((int)p.x, (int)p.y), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 127, 0), 2);
+  }
+
+}
+
 int main(int argc, char** argv)
 {
   if ( argc != 2 )
@@ -144,7 +216,7 @@ int main(int argc, char** argv)
   dnn::Net nnet = dnn::readNet("../yolov5s.onnx"); // todo: remove unnecessary files out of the repository
   nnet.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
   nnet.setPreferableTarget(dnn::DNN_TARGET_CPU);
-
+/*
   vector<MyBBox> people;
 
   // vars for tracker
@@ -213,7 +285,9 @@ int main(int argc, char** argv)
 
   cap.release(); // When everything done, release the video capture object
   destroyAllWindows(); // Closes all the frames
+*/
 
+  paint_skeleton(img);
 
   vector<int> compression_params;
   compression_params.push_back(IMWRITE_PNG_COMPRESSION);
