@@ -121,24 +121,17 @@ void detect_humans(dnn::Net &nnet, Mat img, vector<struct MyBBox> &output)
   }
 }
 
-void paint_skeleton(Mat img)
+void paint_skeleton(Mat img, dnn::Net nnet)
 {
-  // Specify the paths for the 2 files
-  string protoFile = "/home/leaf/openpose/models/pose/mpi/pose_deploy_linevec_faster_4_stages.prototxt";
-  string weightsFile = "/home/leaf/openpose/models/pose/mpi/pose_iter_160000.caffemodel";
-  // Read the network into Memory
-  dnn::Net net = dnn::readNetFromCaffe(protoFile, weightsFile);
-
-  Mat frame = imread("single.jpg");
   // Specify the input image dimensions
   int inWidth = 368;
   int inHeight = 368;
   // Prepare the frame to be fed to the network
   Mat inpBlob = dnn::blobFromImage(img, 1.0 / 255, Size(inWidth, inHeight), Scalar(0, 0, 0), false, false);
   // Set the prepared object as the input blob of the network
-  net.setInput(inpBlob);
+  nnet.setInput(inpBlob);
 
-  Mat output = net.forward();
+  Mat output = nnet.forward();
 
   int H = output.size[2];
   int W = output.size[3];
@@ -213,9 +206,17 @@ int main(int argc, char** argv)
   cvtColor( input_img, img, COLOR_RGB2BGR ); // rgb -> bgr, so that one can actually see the results
   // from now on it is bgr
 
-  dnn::Net nnet = dnn::readNet("../yolov5s.onnx"); // todo: remove unnecessary files out of the repository
-  nnet.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
-  nnet.setPreferableTarget(dnn::DNN_TARGET_CPU);
+  dnn::Net detector_nnet = dnn::readNet("../models/yolo/yolov5s.onnx"); // todo: remove unnecessary files out of the repository
+  detector_nnet.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
+  detector_nnet.setPreferableTarget(dnn::DNN_TARGET_CPU);
+
+
+  // Specify the paths for the 2 files
+  string protoFile = "../models/pose/pose_deploy_linevec_faster_4_stages.prototxt";
+  string weightsFile = "../models/pose/pose_iter_160000.caffemodel";
+  // Read the network into Memory
+  dnn::Net skeleton_nnet = dnn::readNetFromCaffe(protoFile, weightsFile);
+
 /*
   vector<MyBBox> people;
 
@@ -287,7 +288,7 @@ int main(int argc, char** argv)
   destroyAllWindows(); // Closes all the frames
 */
 
-  paint_skeleton(img);
+  paint_skeleton(img, skeleton_nnet);
 
   vector<int> compression_params;
   compression_params.push_back(IMWRITE_PNG_COMPRESSION);
