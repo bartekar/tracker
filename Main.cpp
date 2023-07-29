@@ -217,7 +217,7 @@ int main(int argc, char** argv)
   // Read the network into Memory
   dnn::Net skeleton_nnet = dnn::readNetFromCaffe(protoFile, weightsFile);
 
-/*
+
   vector<MyBBox> people;
 
   // vars for tracker
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
   Mat frame;
   cap >> frame;
 
-  detect_humans(nnet, frame, people);
+  detect_humans(detector_nnet, frame, people);
   for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
   {
     draw_bbox(frame, *iter);
@@ -247,7 +247,14 @@ int main(int argc, char** argv)
   tracker->init(frame, tracker_box);
 
   const int DETECTION_PERIOD= 24;
-  int loops_until_next_detection = DETECTION_PERIOD;
+  int loops_until_next_detection = 24;
+
+  VideoWriter writer;
+  int codec = VideoWriter::fourcc('a', 'v', 'c', '1');
+  double fps = 24.0;
+  string filename = "result.mp4";
+  Size sizeFrame(1920,1080);
+  writer.open(filename, codec, fps, sizeFrame, true);
 
   while(1)
   {
@@ -256,7 +263,7 @@ int main(int argc, char** argv)
 
     if (loops_until_next_detection-- <= 0)
     {
-      detect_humans(nnet, frame, people);
+      detect_humans(detector_nnet, frame, people);
       for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
       {
         draw_bbox(frame, *iter);
@@ -277,19 +284,20 @@ int main(int argc, char** argv)
 
     // Display the resulting frame
     imshow( "Frame", frame );
-
+    writer.write(frame);
     char c=(char)waitKey(25); // Press  ESC on keyboard to exit
     if(c==27)
       break;
     cap >> frame;
   }
 
+  writer.release();
   cap.release(); // When everything done, release the video capture object
   destroyAllWindows(); // Closes all the frames
-*/
 
+/*
   paint_skeleton(img, skeleton_nnet);
-
+*/
   vector<int> compression_params;
   compression_params.push_back(IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(9);
