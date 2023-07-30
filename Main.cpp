@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 
@@ -11,7 +13,9 @@ sources:
 - object detection: code + neural network
 https://github.com/doleron/yolov5-opencv-cpp-python/blob/main/cpp/yolo.cpp
 - object tracking:
-TBD
+general pages...
+- skeleton:
+https://learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-cpp-python/
 
 */
 
@@ -52,7 +56,7 @@ void detect_humans(dnn::Net &nnet, Mat img, vector<struct MyBBox> &output)
 {
   const float INPUT_WIDTH = 640.0;
   const float INPUT_HEIGHT = 640.0;
-  const float SCORE_THRESHOLD = 0.2;
+  const float SCORE_THRESHOLD = 0.4;
   const float NMS_THRESHOLD = 0.4;
   const float CONFIDENCE_THRESHOLD = 0.4;
 
@@ -137,7 +141,7 @@ void paint_skeleton(Mat img, dnn::Net nnet)
   int W = output.size[3];
 
   int nPoints = 15;
-  double thresh = 0.1;
+  double thresh = 0.2;
   int frameWidth = img.cols;
   int frameHeight = img.rows;
   // find the position of the body parts
@@ -209,7 +213,7 @@ int main(int argc, char** argv)
   Rect tracker_box = Rect(0,0,0,0);
   tracker = TrackerMIL::create();
 
-  VideoCapture cap("gump.mp4");
+  VideoCapture cap("../gump.mp4");
 
   // Check if video was opened successfully
   if(!cap.isOpened())
@@ -240,6 +244,15 @@ int main(int argc, char** argv)
   Size sizeFrame(1920,1080);
   writer.open(filename, codec, fps, sizeFrame, true);
 
+  vector<int> bbox_data = vector<int>();
+
+  int frame_number = 0;
+  bbox_data.push_back(frame_number);
+  bbox_data.push_back(tracker_box.x);
+  bbox_data.push_back(tracker_box.y);
+  bbox_data.push_back(tracker_box.width);
+  bbox_data.push_back(tracker_box.height);
+
   while(1)
   {
     if (frame.empty())
@@ -265,8 +278,13 @@ int main(int argc, char** argv)
         rectangle(frame, tracker_box, orange, 1);
       }
     }
+    bbox_data.push_back(++frame_number);
+    bbox_data.push_back(tracker_box.x);
+    bbox_data.push_back(tracker_box.y);
+    bbox_data.push_back(tracker_box.width);
+    bbox_data.push_back(tracker_box.height);
 
-    //paint_skeleton(frame, skeleton_nnet);
+    paint_skeleton(frame, skeleton_nnet);
 
     // Display the resulting frame
     imshow( "Frame", frame );
@@ -280,6 +298,15 @@ int main(int argc, char** argv)
   writer.release();
   cap.release(); // When everything done, release the video capture object
   destroyAllWindows(); // Closes all the frames
+
+  std::ofstream out_file;
+  out_file.open("bounding_boxes.txt", std::ios::app);
+  out_file << "frame_number;x;y;width;height" << endl;
+  for (int i = 0; i < frame_number; i++)
+  {
+    out_file << bbox_data.at(5*i) << ";" << bbox_data.at(5*i+1) << ";" << bbox_data.at(5*i+2) << ";" << bbox_data.at(5*i+3) << ";" << bbox_data.at(5*i+4) << endl;
+  }
+  out_file.close();
 
   return 0;
 }
