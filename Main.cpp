@@ -188,23 +188,7 @@ void paint_skeleton(Mat img, dnn::Net nnet)
 
 int main(int argc, char** argv)
 {
-  if ( argc != 2 )
-  {
-    printf("usage: DisplayImage.out <Image_Path>\n");
-    return -1;
-  }
-  Mat input_img;
-  input_img = imread( argv[1], IMREAD_COLOR ); // rgb image
-
-  if ( !input_img.data )
-  {
-    printf("No image data \n");
-    return -1;
-  }
-
   Mat img;
-  cvtColor( input_img, img, COLOR_RGB2BGR ); // rgb -> bgr, so that one can actually see the results
-  // from now on it is bgr
 
   dnn::Net detector_nnet = dnn::readNet("../models/yolo/yolov5s.onnx"); // todo: remove unnecessary files out of the repository
   detector_nnet.setPreferableBackend(dnn::DNN_BACKEND_OPENCV);
@@ -227,7 +211,7 @@ int main(int argc, char** argv)
 
   VideoCapture cap("gump.mp4");
 
-  // Check if camera opened successfully
+  // Check if video was opened successfully
   if(!cap.isOpened())
   {
     cout << "Error opening video stream or file" << endl;
@@ -246,8 +230,8 @@ int main(int argc, char** argv)
   people.clear();
   tracker->init(frame, tracker_box);
 
-  const int DETECTION_PERIOD= 36;
-  int loops_until_next_detection = 12;
+  const int DETECTION_PERIOD= 20;
+  int loops_until_next_detection = 10;
 
   VideoWriter writer;
   int codec = VideoWriter::fourcc('a', 'v', 'c', '1');
@@ -282,7 +266,7 @@ int main(int argc, char** argv)
       }
     }
 
-    paint_skeleton(frame, skeleton_nnet);
+    //paint_skeleton(frame, skeleton_nnet);
 
     // Display the resulting frame
     imshow( "Frame", frame );
@@ -297,20 +281,5 @@ int main(int argc, char** argv)
   cap.release(); // When everything done, release the video capture object
   destroyAllWindows(); // Closes all the frames
 
-  vector<int> compression_params;
-  compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-  compression_params.push_back(9);
-  try
-  {
-    imwrite("modded.png", img, compression_params);
-  }
-  catch (const cv::Exception& ex)
-  {
-    fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
-  }
-
-  namedWindow("Display Image", WINDOW_AUTOSIZE );
-  imshow("Display Image", img);
-  waitKey(0);
   return 0;
 }
