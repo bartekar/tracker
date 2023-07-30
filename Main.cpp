@@ -138,8 +138,8 @@ void paint_skeleton(Mat img, dnn::Net nnet)
 
   int nPoints = 15;
   double thresh = 0.1;
-  int frameWidth = 448*2;
-  int frameHeight = 704;
+  int frameWidth = img.cols;
+  int frameHeight = img.rows;
   // find the position of the body parts
   vector<Point> points(nPoints);
 
@@ -246,8 +246,8 @@ int main(int argc, char** argv)
   people.clear();
   tracker->init(frame, tracker_box);
 
-  const int DETECTION_PERIOD= 24;
-  int loops_until_next_detection = 24;
+  const int DETECTION_PERIOD= 36;
+  int loops_until_next_detection = 12;
 
   VideoWriter writer;
   int codec = VideoWriter::fourcc('a', 'v', 'c', '1');
@@ -282,6 +282,8 @@ int main(int argc, char** argv)
       }
     }
 
+    paint_skeleton(frame, skeleton_nnet);
+
     // Display the resulting frame
     imshow( "Frame", frame );
     writer.write(frame);
@@ -295,9 +297,6 @@ int main(int argc, char** argv)
   cap.release(); // When everything done, release the video capture object
   destroyAllWindows(); // Closes all the frames
 
-/*
-  paint_skeleton(img, skeleton_nnet);
-*/
   vector<int> compression_params;
   compression_params.push_back(IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(9);
