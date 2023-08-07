@@ -45,7 +45,6 @@ Output:
 - run detector only if no person is detected
 - optimize skeleton net to run on person if bbox is big enough, run only on bbox
 - draw skeleton only if confidence is high enough
-- add fps
 - compare against another algorithm (DeepSORT?)
 - add docker container
 - add nnets to git lfs

@@ -259,6 +259,7 @@ int main(int argc, char** argv)
   bbox_data.push_back(-1);
 
   int64_t start, finish, fps;
+  float average_fps = 0.0f;
 
   while(1)
   {
@@ -295,8 +296,6 @@ int main(int argc, char** argv)
     if (ENABLE_SKELETON)
       paint_skeleton(frame, skeleton_nnet);
 
-    finish = getTickCount();
-    fps = round( getTickFrequency() / (finish - start) );
     bbox_data.push_back(fps);
 
     cout << frame_number << "/" << total_frames << endl;
@@ -307,10 +306,17 @@ int main(int argc, char** argv)
       char c=(char)waitKey(25); // Press  ESC on keyboard to exit
       if(c==27)
         break;
-      }
+    }
     writer.write(frame);
+
+    finish = getTickCount();
+    fps = round( getTickFrequency() / (finish - start) );
+    average_fps += fps;
+
     cap >> frame;
   }
+  average_fps /= total_frames;
+  cout << "average fps " << average_fps << endl;
 
   writer.release();
   cap.release(); // When everything done, release the video capture object
