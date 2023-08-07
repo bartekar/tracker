@@ -243,10 +243,10 @@ int main(int argc, char** argv)
 
   VideoWriter writer;
   int codec = VideoWriter::fourcc('a', 'v', 'c', '1');
-  double fps = 24.0;
+  double fps_video = 24.0;
   string filename = "result.mp4";
   Size sizeFrame(1920,1080);
-  writer.open(filename, codec, fps, sizeFrame, true);
+  writer.open(filename, codec, fps_video, sizeFrame, true);
 
   vector<int> bbox_data = vector<int>();
 
@@ -256,12 +256,16 @@ int main(int argc, char** argv)
   bbox_data.push_back(tracker_box.y);
   bbox_data.push_back(tracker_box.width);
   bbox_data.push_back(tracker_box.height);
+  bbox_data.push_back(-1);
+
+  int64_t start, finish, fps;
 
   while(1)
   {
     if (frame.empty())
       break;
 
+    start = getTickCount();
     if (loops_until_next_detection-- <= 0)
     {
       detect_humans(detector_nnet, frame, people);
@@ -291,7 +295,10 @@ int main(int argc, char** argv)
     if (ENABLE_SKELETON)
       paint_skeleton(frame, skeleton_nnet);
 
-    // Display the resulting frame
+    finish = getTickCount();
+    fps = round( getTickFrequency() / (finish - start) );
+    bbox_data.push_back(fps);
+
     if (ENABLE_DRAWING)
     {
       imshow( "Frame", frame );
@@ -308,11 +315,11 @@ int main(int argc, char** argv)
   destroyAllWindows(); // Closes all the frames
 
   std::ofstream out_file;
-  out_file.open("bounding_boxes.txt", std::ios::app);
-  out_file << "frame_number;x;y;width;height" << endl;
+  out_file.open("bounding_boxes.txt", std::ios::out);
+  out_file << "frame_number;fps;x;y;width;height" << endl;
   for (int i = 0; i < frame_number; i++)
   {
-    out_file << bbox_data.at(5*i) << ";" << bbox_data.at(5*i+1) << ";" << bbox_data.at(5*i+2) << ";" << bbox_data.at(5*i+3) << ";" << bbox_data.at(5*i+4) << endl;
+    out_file << bbox_data.at(6*i) << ";" << bbox_data.at(6*i+5) << ";" << bbox_data.at(6*i+1) << ";" << bbox_data.at(6*i+2) << ";" << bbox_data.at(6*i+3) << ";" << bbox_data.at(6*i+4) << endl;
   }
   out_file.close();
 
