@@ -38,3 +38,15 @@ Output:
 # Sources used to obtain neural networks
 - https://learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-cpp-python/
 - https://github.com/doleron/yolov5-opencv-cpp-python/blob/main/cpp/yolo.cpp
+
+# Further ideas:
+- go over source code
+- disable skeleton-net and optimize params of tracker
+- run detector only if no person is detected
+- optimize skeleton net to run on person if bbox is big enough, run only on bbox
+- draw skeleton only if confidence is high enough
+- add fps
+- compare against another algorithm (DeepSORT?)
+- add docker container
+- add nnets to git lfs
+
