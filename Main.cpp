@@ -35,12 +35,12 @@ void draw_bbox(Mat img, MyBBox bbox)
   Rect r = bbox.bbox;
   if (r.x + r.width > img.cols)
   {
-    cout << "bbox is too high"  << endl;
+    cout << "bbox is too wide"  << endl;
     return;
   }
   if (r.y + r.height > img.rows)
   {
-    cout << "bbox is too wide"  << endl;
+    cout << "bbox is too high"  << endl;
     return;
   }
 
