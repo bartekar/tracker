@@ -192,6 +192,9 @@ void paint_skeleton(Mat img, dnn::Net nnet)
 
 int main(int argc, char** argv)
 {
+  // some variables used during development
+  const bool ENABLE_SKELETON = false; // en-/ disable the skeleton computations
+  const bool ENABLE_DRAWING = false; // en-/ disable display of current frame + results
   Mat img;
 
   dnn::Net detector_nnet = dnn::readNet("../models/yolo/yolov5s.onnx"); // todo: remove unnecessary files out of the repository
@@ -203,8 +206,9 @@ int main(int argc, char** argv)
   string protoFile = "../models/pose/pose_deploy_linevec_faster_4_stages.prototxt";
   string weightsFile = "../models/pose/pose_iter_160000.caffemodel";
   // Read the network into Memory
-  dnn::Net skeleton_nnet = dnn::readNetFromCaffe(protoFile, weightsFile);
-
+  dnn::Net skeleton_nnet;
+  if (ENABLE_SKELETON)
+    dnn::Net skeleton_nnet = dnn::readNetFromCaffe(protoFile, weightsFile);
 
   vector<MyBBox> people;
 
@@ -284,14 +288,18 @@ int main(int argc, char** argv)
     bbox_data.push_back(tracker_box.width);
     bbox_data.push_back(tracker_box.height);
 
-    paint_skeleton(frame, skeleton_nnet);
+    if (ENABLE_SKELETON)
+      paint_skeleton(frame, skeleton_nnet);
 
     // Display the resulting frame
-    imshow( "Frame", frame );
+    if (ENABLE_DRAWING)
+    {
+      imshow( "Frame", frame );
+      char c=(char)waitKey(25); // Press  ESC on keyboard to exit
+      if(c==27)
+        break;
+      }
     writer.write(frame);
-    char c=(char)waitKey(25); // Press  ESC on keyboard to exit
-    if(c==27)
-      break;
     cap >> frame;
   }
 
