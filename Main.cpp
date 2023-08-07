@@ -225,7 +225,7 @@ int main(int argc, char** argv)
     cout << "Error opening video stream or file" << endl;
     return -1;
   }
-
+  int total_frames = cap.get(CAP_PROP_FRAME_COUNT);
   Mat frame;
   cap >> frame;
 
@@ -298,6 +298,8 @@ int main(int argc, char** argv)
     finish = getTickCount();
     fps = round( getTickFrequency() / (finish - start) );
     bbox_data.push_back(fps);
+
+    cout << frame_number << "/" << total_frames << endl;
 
     if (ENABLE_DRAWING)
     {
