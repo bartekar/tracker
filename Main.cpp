@@ -215,7 +215,13 @@ int main(int argc, char** argv)
   // vars for tracker
   Ptr<Tracker> tracker;
   Rect tracker_box = Rect(0,0,0,0);
-  tracker = TrackerMIL::create();
+  TrackerKCF::Params tracker_params = TrackerKCF::Params();
+  tracker_params.detect_thresh = 0.6f;
+  tracker_params.sigma = 0.8f;
+  // tracker_params.max_patch_size = 1024;
+  // tracker_params.pca_learning_rate = 0.5f;
+  // tracker_params.lambda = 0.5f;
+  tracker = TrackerKCF::create(tracker_params);
 
   VideoCapture cap("../gump.mp4");
 
@@ -229,17 +235,7 @@ int main(int argc, char** argv)
   Mat frame;
   cap >> frame;
 
-  detect_humans(detector_nnet, frame, people);
-  for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
-  {
-    draw_bbox(frame, *iter);
-  }
-  tracker_box = people[0].bbox;
-  people.clear();
-  tracker->init(frame, tracker_box);
-
-  const int DETECTION_PERIOD= 20;
-  int loops_until_next_detection = 10;
+  bool person_detected = false;
 
   VideoWriter writer;
   int codec = VideoWriter::fourcc('a', 'v', 'c', '1');
@@ -251,12 +247,6 @@ int main(int argc, char** argv)
   vector<int> bbox_data = vector<int>();
 
   int frame_number = 0;
-  bbox_data.push_back(frame_number);
-  bbox_data.push_back(tracker_box.x);
-  bbox_data.push_back(tracker_box.y);
-  bbox_data.push_back(tracker_box.width);
-  bbox_data.push_back(tracker_box.height);
-  bbox_data.push_back(-1);
 
   int64_t start, finish, fps;
   float average_fps = 0.0f;
@@ -267,26 +257,32 @@ int main(int argc, char** argv)
       break;
 
     start = getTickCount();
-    if (loops_until_next_detection-- <= 0)
+
+    if (person_detected)
     {
-      detect_humans(detector_nnet, frame, people);
-      for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
-      {
-        draw_bbox(frame, *iter);
-      }
-      tracker_box = people[0].bbox;
-      people.clear();
-      tracker->init(frame, tracker_box);
-      loops_until_next_detection = DETECTION_PERIOD;
-    }
-    else
-    {
-      bool ok = tracker->update(frame, tracker_box);
-      if (ok)
+      person_detected = tracker->update(frame, tracker_box);
+      if (person_detected)
       {
         rectangle(frame, tracker_box, orange, 1);
       }
     }
+
+    if (! person_detected)
+    {
+      detect_humans(detector_nnet, frame, people);
+
+      tracker = TrackerKCF::create(tracker_params);
+      tracker_box = people[0].bbox;
+
+      tracker->init(frame, tracker_box);
+      for (vector<MyBBox>::iterator iter = people.begin(); iter != people.end(); ++iter)
+      {
+        draw_bbox(frame, *iter);
+      }
+      people.clear();
+      person_detected = true;
+    }
+
     bbox_data.push_back(++frame_number);
     bbox_data.push_back(tracker_box.x);
     bbox_data.push_back(tracker_box.y);
