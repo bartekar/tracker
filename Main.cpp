@@ -20,7 +20,7 @@ https://learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-c
 */
 
 // some variables used during development
-#define ENABLE_SKELETON 1 // en-/ disable the skeleton computations
+#define ENABLE_SKELETON 0 // en-/ disable the skeleton computations
 #define ENABLE_DRAWING 1 // en-/ disable display of current frame + results
 
 Scalar orange = Scalar(0, 127, 255); // bgr
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
   string protoFile = "../models/pose/pose_deploy_linevec_faster_4_stages.prototxt";
   string weightsFile = "../models/pose/pose_iter_160000.caffemodel";
   // Read the network into Memory
-  #if defined ( ENABLE_SKELETON )
+  #if ENABLE_SKELETON > 0
     dnn::Net skeleton_nnet = dnn::readNetFromCaffe(protoFile, weightsFile);
   #endif // defined
 
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
     bbox_data.push_back(tracker_box.width);
     bbox_data.push_back(tracker_box.height);
 
-    #if defined ( ENABLE_SKELETON )
+    #if ENABLE_SKELETON > 0
     paint_skeleton(frame, skeleton_nnet);
     #endif
 
@@ -298,7 +298,7 @@ int main(int argc, char** argv)
 
     cout << frame_number << "/" << total_frames << endl;
 
-    #if defined ( ENABLE_DRAWING )
+    #if ENABLE_DRAWING > 0
     {
       imshow( "Frame", frame );
       char c=(char)waitKey(25); // Press  ESC on keyboard to exit
