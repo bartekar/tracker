@@ -10,9 +10,9 @@ The following source code is a minimal viable prototype to show some basic techn
 - README.md      This document
 - Main.cpp       The sole source file
 - CMakeLists.txt Instructions to build the project
-- models/        Neural networks
 - gump.mp4       Demonstration video
-- results/       Expected results
+- models/yolo/   Neural network to detect humans
+- models/pose/   Neural network to compute the skeleton. Due to file size, this folder cannot be shared over git lfs and is therefore missing.
 
 # Installation, Prerequisites and Building
 
@@ -29,7 +29,7 @@ Executing the generated runnable loads a video named "gump.mp4" out of the paren
 - KCF tracker tracks movement of the person
 - If KCF fails, then yolo5 is used again to find the person
 - The bounding box of the person is drawn onto the image
-- In each frame, pose-net is used to draw the skeleton of whatever it finds...
+- In each frame, pose-net (disbaled by default) may be used to draw the skeleton of whatever it finds...
 
 Output:
 - An mp4 file named "results.mp4" is created inside the build folder. It is identical to the input video but also contains the bounding box plus the drawn skeleton
@@ -45,5 +45,4 @@ Output:
 - draw skeleton only if confidence is high enough
 - compare against another algorithm (DeepSORT?)
 - add docker container
-- add nnets to git lfs
 
