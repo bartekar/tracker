@@ -26,8 +26,8 @@ The following source code is a minimal viable prototype to show some basic techn
 
 Executing the generated runnable loads a video named "gump.mp4" out of the parent folder and immediatly starts the processing steps:
 - yolo5 net is used to detect people. The first person found will be tracked
-- MLI Tracker trackes movement of the person
-- Every 20 frames, yolo5 net is used again to find a person
+- KCF tracker tracks movement of the person
+- If KCF fails, then yolo5 is used again to find the person
 - The bounding box of the person is drawn onto the image
 - In each frame, pose-net is used to draw the skeleton of whatever it finds...
 
@@ -41,8 +41,6 @@ Output:
 
 # Further ideas:
 - go over source code
-- disable skeleton-net and optimize params of tracker
-- run detector only if no person is detected
 - optimize skeleton net to run on person if bbox is big enough, run only on bbox
 - draw skeleton only if confidence is high enough
 - compare against another algorithm (DeepSORT?)
